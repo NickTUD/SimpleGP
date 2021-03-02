@@ -1,6 +1,5 @@
 import numpy as np
 
-
 class Node:	# Base class with general functionalities
 
 	def __init__(self):
@@ -17,6 +16,11 @@ class Node:	# Base class with general functionalities
 	def GetHumanExpression( self ):
 		result = [ '' ]	# trick to pass string by reference
 		self._GetHumanExpressionRecursive(result)
+		return result[0]
+
+	def GetPytorchExpression( self ):
+		result = ['']  # trick to pass string by reference
+		self._GetPytorchExpressionRecursive(result)
 		return result[0]
 
 	def AppendChild( self, N ):
@@ -69,6 +73,14 @@ class Node:	# Base class with general functionalities
 			self._children[i]._GetHumanExpressionRecursive( result )
 			args.append( result[0] )
 		result[0] = self._GetHumanExpressionSpecificNode( args )
+		return result
+
+	def _GetPytorchExpressionRecursive( self, result ):
+		args = []
+		for i in range(self.arity):
+			self._children[i]._GetPytorchExpressionRecursive( result )
+			args.append( result[0] )
+		result[0] = self._GetPytorchExpressionSpecificNode( args )
 		return result
 
 

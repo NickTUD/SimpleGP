@@ -127,4 +127,4 @@ class SimpleGP:
 			self.generations = self.generations + 1
 
 			if self.verbose:
-				print ('g:',self.generations,'elite fitness:', np.round(self.fitness_function.elite.fitness,3), ', size:', len(self.fitness_function.elite.GetSubtree()))
+				print ('g:',self.generations,', elite:', self.fitness_function.elite.GetHumanExpression(), ', elite fitness:', np.round(self.fitness_function.elite.fitness,3), ', size:', len(self.fitness_function.elite.GetSubtree()))
