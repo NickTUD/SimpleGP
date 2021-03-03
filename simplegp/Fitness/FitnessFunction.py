@@ -79,6 +79,9 @@ class LossFunctionEvoFitness:
 					loss.backward()
 				except RuntimeError as e:
 					individual.fitness = np.inf
+					if not self.elite or individual.fitness < self.elite.fitness:
+						del self.elite
+						self.elite = deepcopy(individual)
 					return
 				optimizer.step()
 

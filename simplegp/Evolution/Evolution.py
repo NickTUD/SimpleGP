@@ -2,9 +2,11 @@ import numpy as np
 from numpy.random import random, randint
 import time
 from copy import deepcopy
+from datetime import datetime
 
 from simplegp.Variation import Variation
 from simplegp.Selection import Selection
+from simplegp.Utils.Logger import GPLogger
 
 import inspect
 
@@ -27,7 +29,8 @@ class SimpleGP:
 		max_tree_size=100,
 		max_features=-1,
 		tournament_size=4,
-		verbose=False
+		verbose=False,
+		logging=True
 		):
 
 		args, _, _, values = inspect.getargvalues(inspect.currentframe())
@@ -37,6 +40,7 @@ class SimpleGP:
 
 		self.population = []
 		self.generations = 0
+		self.runid = 'p{}_{}'.format(pop_size,datetime.now().strftime("%y%m%d_%H%M"))
 
 
 	def __ShouldTerminate(self):
@@ -126,5 +130,10 @@ class SimpleGP:
 
 			self.generations = self.generations + 1
 
-			if self.verbose:
-				print ('g:',self.generations,', elite:', self.fitness_function.elite.GetHumanExpression(), ', elite fitness:', np.round(self.fitness_function.elite.fitness,3), ', size:', len(self.fitness_function.elite.GetSubtree()))
+			if self.logging:
+				gen_log = {'gen': self.generations, 'elite': self.fitness_function.elite.GetHumanExpression(), 'elite_fitness': np.round(self.fitness_function.elite.fitness,3)}
+
+				with GPLogger('logs\generations\{}.jsonl'.format(self.runid)) as logger:
+					logger.write(gen_log)
+
+			print ('g:',self.generations,', elite:', self.fitness_function.elite.GetHumanExpression(), ', elite fitness:', np.round(self.fitness_function.elite.fitness,3), ', size:', len(self.fitness_function.elite.GetSubtree()))

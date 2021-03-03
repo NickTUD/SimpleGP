@@ -37,8 +37,9 @@ mse = nn.MSELoss()
 model = SimpleNeuralNet(params["input_size"], params["hidden_size"] , nn.Sigmoid())
 fitness_func = LossFunctionEvoFitness(model, train_loader, test_loader, params, mse)
 
-functions = [AddNode(), SubNode(), MulNode(), DivNode(), LogNode(), SumNode()]
+functions = [AddNode(), SubNode(), MulNode(), DivNode(), LogNode(), SumNode(), AbsNode()]
 terminals = [FeatureNode("target"), FeatureNode("output")]
-sgp = SimpleGP(fitness_func, functions, terminals, pop_size=60, max_generations=50, verbose=True,)
 
-sgp.Run()
+for i in range(3):
+    sgp = SimpleGP(fitness_func, functions, terminals, pop_size=10, max_generations=30, verbose=True)
+    sgp.Run()
