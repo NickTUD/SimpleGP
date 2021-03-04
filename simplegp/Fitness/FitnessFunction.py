@@ -1,5 +1,6 @@
 import numpy as np
 from copy import deepcopy
+from simplegp.Utils.SimpleNet import SimpleNeuralNet
 import torch
 
 class SymbolicRegressionFitness:
@@ -12,6 +13,7 @@ class SymbolicRegressionFitness:
 		self.elite_scaling_a = 0.0
 		self.elite_scaling_b = 1.0
 		self.evaluations = 0
+		self.archive = {}
 
 	def Evaluate( self, individual ):
 
@@ -43,64 +45,81 @@ class SymbolicRegressionFitness:
 
 class LossFunctionEvoFitness:
 
-	def __init__(self, model, trainloader, testloader, params, eval_func):
-		self.model = model
+	def __init__(self, trainloader, testloader, params, eval_func):
+		self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 		self.trainloader = trainloader
 		self.testloader =  testloader
 		self.params = params
 		self.eval_func = eval_func
 		self.evaluations = 0
 		self.elite = None
+		self.model = None
+		self.fitness_archive = {}
 
 	def Evaluate(self, individual):
 
-		self.evaluations = self.evaluations + 1
+		key = individual.GetHumanExpression()
+		if key in self.fitness_archive:
+			individual.fitness = self.fitness_archive[key]
 
-		# Loss and optimizer
-		optimizer = torch.optim.Adam(self.model.parameters(), lr=self.params["learning_rate"])
+		else:
 
-		loss_func_str = individual.GetPytorchExpression()
+			self.model = SimpleNeuralNet(self.params["input_size"], self.params["hidden_size"] , torch.nn.Sigmoid()).to(self.device)
 
-		# Train the model
-		total_step = len(self.trainloader)
-		for epoch in range(self.params["num_epochs"]):
-			for i, data in enumerate(self.trainloader):
-				# Move tensors to the configured device
-				indep = data["indep"]
-				target = data["dep"]
+			self.evaluations = self.evaluations + 1
 
-				# Forward pass
-				output = self.model(indep)
-				loss = eval(loss_func_str)
+			# Loss and optimizer
+			optimizer = torch.optim.Adam(self.model.parameters(), lr=self.params["learning_rate"])
 
-				# Backward and optimize
-				optimizer.zero_grad()
-				try:
-					loss.backward()
-				except RuntimeError as e:
-					individual.fitness = np.inf
-					if not self.elite or individual.fitness < self.elite.fitness:
-						del self.elite
-						self.elite = deepcopy(individual)
-					return
-				optimizer.step()
+			loss_func_str = individual.GetPytorchExpression()
 
-				# print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'.format(
-				# 	epoch + 1, self.params["num_epochs"], i + 1, total_step, loss.item()))
+			# Train the model
+			total_step = len(self.trainloader)
+			for epoch in range(self.params["num_epochs"]):
+				for i, data in enumerate(self.trainloader):
+					# Move tensors to the configured device
+					indep = data["indep"].to(self.device)
+					target = data["dep"].to(self.device)
 
-		with torch.no_grad():
-			for test_data in self.testloader:
-				test_indep = test_data["indep"]
-				test_target = test_data["dep"]
+					# Forward pass
+					output = self.model(indep)
+					loss = torch.mean(eval(loss_func_str))
 
-				# Forward pass
-				test_outputs = self.model(test_indep)
-				mse_loss = self.eval_func(test_outputs, test_target).item()
-				if np.isnan(mse_loss):
-					mse_loss = np.inf
 
-		individual.fitness = mse_loss
+					# Backward and optimize
+					optimizer.zero_grad(set_to_none=True)
+					try:
+						loss.backward()
+					except RuntimeError as e:
+						print('Individual {} had the following error: {}'.format(key, e))
+						individual.fitness = np.inf
+						self._updateElite(individual)
+						return
+					optimizer.step()
 
+			print('Individual {} has the following training loss: {}'.format(key, loss.item()))
+
+			if np.isnan(loss.item()):
+				individual.fitness = np.inf
+			else:
+				with torch.no_grad():
+					for test_data in self.testloader:
+						test_indep = test_data["indep"].to(self.device)
+						test_target = test_data["dep"].to(self.device)
+
+						# Forward pass
+						test_outputs = self.model(test_indep)
+						mse_loss = self.eval_func(test_outputs, test_target).item()
+						if np.isnan(mse_loss):
+							mse_loss = np.inf
+
+				individual.fitness = mse_loss
+
+		print('Individual {} has the following fitness: {}'.format(key, individual.fitness))
+
+		self._updateElite(individual)
+
+	def _updateElite(self, individual):
 		if not self.elite or individual.fitness < self.elite.fitness:
 			del self.elite
 			self.elite = deepcopy(individual)
