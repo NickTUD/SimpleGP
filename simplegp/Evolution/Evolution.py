@@ -131,7 +131,10 @@ class SimpleGP:
 			self.generations = self.generations + 1
 
 			if self.logging:
-				gen_log = {'gen': self.generations, 'elite': self.fitness_function.elite.GetHumanExpression(), 'elite_fitness': np.round(self.fitness_function.elite.fitness,3)}
+				gen_log = {'gen': self.generations,
+						   'elite': self.fitness_function.elite.GetHumanExpression(),
+						   'elite_fitness': np.round(self.fitness_function.elite.fitness,3),
+						   'num_infs' : int(sum([np.isinf(individual.fitness) for individual in self.population]))}
 
 				with GPLogger('logs\generations\{}.jsonl'.format(self.runid)) as logger:
 					logger.write(gen_log)
