@@ -34,12 +34,11 @@ test_loader = torch.utils.data.DataLoader(dataset=test,
                                           shuffle=False)
 
 mse = nn.MSELoss()
-model = SimpleNeuralNet(params["input_size"], params["hidden_size"] , nn.Sigmoid())
-fitness_func = LossFunctionEvoFitness(model, train_loader, test_loader, params, mse)
+fitness_func = LossFunctionEvoFitness(train_loader, test_loader, params, mse)
 
-functions = [AddNode(), SubNode(), MulNode(), DivNode(), LogNode(), SumNode(), AbsNode()]
+functions = [AddNode(), SubNode(), MulNode(), DivNode(), LogNode(), AbsNode()]
 terminals = [FeatureNode("target"), FeatureNode("output")]
 
 for i in range(3):
-    sgp = SimpleGP(fitness_func, functions, terminals, pop_size=10, max_generations=30, verbose=True)
+    sgp = SimpleGP(fitness_func, functions, terminals, pop_size=40, max_generations=20, initialization_max_tree_height=2, verbose=True)
     sgp.Run()

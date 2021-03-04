@@ -76,23 +76,6 @@ class FeatureNode(Node):
 	def _GetPytorchExpressionSpecificNode(self, args):
 		return str(self.id)
 
-
-class PowNode(Node):
-
-	def __init__(self, power):
-		super(PowNode, self).__init__()
-		self.arity = 2
-
-	def __repr__(self):
-		return '^'
-
-	def _GetHumanExpressionSpecificNode(self, args):
-		return '( ' + args[0] + '**( ' + args[1] + ' ))'
-
-	def _GetPytorchExpressionSpecificNode(self, args):
-		return 'torch.pow(' + args[0] + ',' + args[1] + ')'
-
-
 class ExpNode(Node):
 	def __init__(self):
 		super(ExpNode, self).__init__()
@@ -149,3 +132,17 @@ class AbsNode(Node):
 
 	def _GetPytorchExpressionSpecificNode(self, args):
 		return 'torch.abs(' + args[0] + ')'
+
+class MeanNode(Node):
+	def __init__(self):
+		super(MeanNode, self).__init__()
+		self.arity = 1
+
+	def __repr__(self):
+		return 'mean'
+
+	def _GetHumanExpressionSpecificNode(self, args):
+		return 'mean( ' + args[0] + ' )'
+
+	def _GetPytorchExpressionSpecificNode(self, args):
+		return 'torch.mean(' + args[0] + ')'
