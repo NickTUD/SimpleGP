@@ -146,3 +146,17 @@ class MeanNode(Node):
 
 	def _GetPytorchExpressionSpecificNode(self, args):
 		return 'torch.mean(' + args[0] + ')'
+
+class SqrtNode(Node):
+	def __init__(self):
+		super(SqrtNode, self).__init__()
+		self.arity = 1
+
+	def __repr__(self):
+		return 'sqrt'
+
+	def _GetHumanExpressionSpecificNode(self, args):
+		return 'sqrt( ' + args[0] + ' )'
+
+	def _GetPytorchExpressionSpecificNode(self, args):
+		return 'torch.sqrt(' + args[0] + ')'
