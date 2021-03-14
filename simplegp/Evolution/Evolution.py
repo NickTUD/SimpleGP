@@ -132,11 +132,8 @@ class SimpleGP:
 
 			if self.logging:
 				gen_log = {'gen': self.generations,
-						   'elite': self.fitness_function.elite.GetHumanExpression(),
-						   'elite_fitness': np.round(self.fitness_function.elite.fitness,3),
-						   'num_infs' : int(sum([np.isinf(individual.fitness) for individual in self.population]))}
+							'elite': self.fitness_function.elite.GetHumanExpression(),
+							'elite_fitness': np.round(self.fitness_function.elite.fitness,3)}
 
-				with GPLogger('logs\generations\{}.jsonl'.format(self.runid)) as logger:
+				with GPLogger('logs\\generations\\{}.jsonl'.format(self.runid)) as logger:
 					logger.write(gen_log)
-
-			print ('g:',self.generations,', elite:', self.fitness_function.elite.GetHumanExpression(), ', elite fitness:', np.round(self.fitness_function.elite.fitness,3), ', size:', len(self.fitness_function.elite.GetSubtree()))
